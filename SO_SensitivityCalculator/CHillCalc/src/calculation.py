@@ -19,9 +19,9 @@ import noise as nse
 class Calculation:
     def __init__(self):
         #***** Private variables *****
-        self.__nse = nse.Noise()
         self.__ph  = phy.Physics()
         self.__pb2 = exp.PB2()
+        self.__nse = nse.Noise()
 
         #Unit conversions
         self.__GHz    = 1.e-09
@@ -142,7 +142,7 @@ class Calculation:
         return cumPower, NEP_ph
 
     #Calculate mapping speed [(K^2-sec)^-1]
-    def calcMappingSpeed(self, elemArr, emmArr, effArr, tempArr, bandCenter=None, fbw=None, psatFact=None, Tb=None, Tc=None, n=None, nDet=None, nei=None, boloR=None, bf=None, nModes=None):
+    def calcMappingSpeed(self, elemArr, emmArr, effArr, tempArr, bandCenter=None, fbw=None, psatFact=None, Tb=None, Tc=None, n=None, nDet=None, detYield=None, nei=None, boloR=None, bf=None, nModes=None):
         if bandCenter == None:
             bandCenter = self.__pb2.dBandCenter
         if fbw == None:
@@ -157,6 +157,8 @@ class Calculation:
             n = self.__pb2.n
         if nDet == None:
             nDet = self.__pb2.nDetArr[1]
+        if detYield == None:
+            detYield = 1.0
         if nei == None:
             nei = self.__pb2.nei
         if boloR == None:
@@ -184,14 +186,14 @@ class Calculation:
         NEP = np.sqrt(NEP_ph**2 + NEP_bolo**2 + NEP_rd**2)
         NET = self.__nse.NETfromNEP(NEP, bandCenter, fbw, skyEff)
         #NET array
-        NETarr = self.__nse.NETarr(NET, nDet)
+        NETarr = self.__nse.NETarr(NET, nDet, detYield)
         #Mapping speed
-        MS = self.__nse.mappingSpeed(NET, nDet)
+        MS = self.__nse.mappingSpeed(NET, nDet, detYield)
 
         return cumPower, NEP_ph, NEP_bolo, NEP_rd, NEP, NET_ph, NET_bolo, NET_rd, NET, NETarr, MS
     
     #Calculate mapping speed [(K^2-sec)^-1]
-    def calcMappingSpeed_fixedPsat(self, elemArr, emmArr, effArr, tempArr, bandCenter=None, fbw=None, psat=None, Tb=None, Tc=None, n=None, nDet=None, nei=None, boloR=None, bf=None, nModes=None):
+    def calcMappingSpeed_fixedPsat(self, elemArr, emmArr, effArr, tempArr, bandCenter=None, fbw=None, psat=None, Tb=None, Tc=None, n=None, nDet=None, detYield=None, nei=None, boloR=None, bf=None, nModes=None):
         if bandCenter == None:
             bandCenter = self.__pb2.dBandCenter
         if fbw == None:
@@ -206,6 +208,8 @@ class Calculation:
             n = self.__pb2.n
         if nDet == None:
             nDet = self.__pb2.d_nDet
+        if detYield == None:
+            detYield = 1.0
         if nei == None:
             nei = self.__pb2.nei
         if boloR == None:
@@ -233,9 +237,9 @@ class Calculation:
         NEP = np.sqrt(NEP_ph**2 + NEP_bolo**2 + NEP_rd**2)
         NET = self.__nse.NETfromNEP(NEP, bandCenter, fbw, skyEff)
         #NET array
-        NETarr = self.__nse.NETarr(NET, nDet)
+        NETarr = self.__nse.NETarr(NET, nDet, detYield)
         #Mapping speed
-        MS = self.__nse.mappingSpeed(NET, nDet)
+        MS = self.__nse.mappingSpeed(NET, nDet, detYield)
 
         return cumPower, NEP_ph, NEP_bolo, NEP_rd, NEP, NET_ph, NET_bolo, NET_rd, NET, NETarr, MS
         
@@ -264,6 +268,7 @@ class Calculation:
         boloR      = exp.boloR
         bf         = exp.bf
         nModes     = exp.nModes
+        detYield   = exp.detYield
         
         #Store the Overall Sensitivity and detector count values for writing to the table
         SensitivityInvSqTotal = 0.
@@ -275,7 +280,7 @@ class Calculation:
         #detector NEP, detector NET, and NET array for LFT
         for i in range(exp.numBands):
             #Identify the band center and fbw for this interation
-            bandID     = exp.bandIDArr[i]
+            bandID     = i
             bandCenter = exp.bandCenterArr[i]
             fbw        = exp.fbwArr[i]
             pixSize    = exp.pixSizeArr[i]
@@ -286,13 +291,13 @@ class Calculation:
             DetectorCountTotal += numDet
             
             #Retrieve the optical elements
-            elemArr, emisArr, effArr, tempArr = exp.bandParams(bandID)
+            elemArr, emisArr, effArr, tempArr = exp.getOpticalParams(bandID)
             
             #Calculate sensitivity
             if fixedPsat:
-                cumPower, NEPphoton, NEPbolo, NEPread, NEPTotal, NETphoton, NETbolo, NETread, NET, NETArray, MS = self.calcMappingSpeed_fixedPsat(elemArr, emisArr, effArr, tempArr, bandCenter, fbw, psatFact, Tb, Tc, n, numDet, nei, boloR, bf, nModes)
+                cumPower, NEPphoton, NEPbolo, NEPread, NEPTotal, NETphoton, NETbolo, NETread, NET, NETArray, MS = self.calcMappingSpeed_fixedPsat(elemArr, emisArr, effArr, tempArr, bandCenter, fbw, psatFact, Tb, Tc, n, numDet, detYield, nei, boloR, bf, nModes)
             else:
-                cumPower, NEPphoton, NEPbolo, NEPread, NEPTotal, NETphoton, NETbolo, NETread, NET, NETArray, MS = self.calcMappingSpeed(elemArr, emisArr, effArr, tempArr, bandCenter, fbw, psatFact, Tb, Tc, n, numDet, nei, boloR, bf, nModes)
+                cumPower, NEPphoton, NEPbolo, NEPread, NEPTotal, NETphoton, NETbolo, NETread, NET, NETArray, MS = self.calcMappingSpeed(elemArr, emisArr, effArr, tempArr, bandCenter, fbw, psatFact, Tb, Tc, n, numDet, detYield, nei, boloR, bf, nModes)
             
             #Calculate aperture efficiency
             ApertEff = effArr[elemArr.tolist().index('LyotStop')]

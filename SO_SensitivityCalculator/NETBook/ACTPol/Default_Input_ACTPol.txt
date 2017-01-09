@@ -27,4 +27,3 @@ TLP1K,1.2
 T1K,1.2
 T100mK,0.1
 etalensr,0.995
-

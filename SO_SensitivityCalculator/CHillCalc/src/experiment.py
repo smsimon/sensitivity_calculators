@@ -1,165 +1,153 @@
 #!/usr/local/bin/python
 
-#Classes for handling CMB experiments
-#class PB2
+#Class for handling CMB experiments
 
 #python Version 2.7.2
 import numpy as np
 
-#Class for handling PB2 parameters
-class PB2:
-    def __init__(self):
+#Function that returns a PB2 class
+def PB2():
+    #Locate parameter files
+    expParamDir   = "./experimentParams/PB2/"
+    optParamDir   = "./opticalParams/PB2/"
+    expParamFile  = expParamDir+"PB2_expParams.txt"
+    optParamFiles = [optParamDir+"PB2_90GHzOpticalParams.txt",
+                     optParamDir+"PB2_150GHzOpticalParams.txt",
+                     optParamDir+"PB2_220GHzOpticalParams.txt",
+                     optParamDir+"PB2_280GHzOpticalParams.txt"]
+    return Experiment("PB2", expParamFile, optParamFiles)
+
+#Function that returns an ACTPol class
+def ACTPol():
+    #Locate parameter files
+    expParamDir   = "./experimentParams/ACTPol/"
+    optParamDir   = "./opticalParams/ACTPol/"
+    expParamFile  = expParamDir+"ACTPol_expParams.txt"
+    optParamFiles = [optParamDir+"ACTPol_150GHzOpticalParams.txt"]
+    return Experiment("ACTPol", expParamFile, optParamFiles)
+
+#Function that retuns the all V1 classes
+def SOV1():
+    #Locate parameter files
+    expParamDir = "./experimentParams/SO_V1/"
+    optParamDir = "./opticalParams/SO_V1/"
+
+    #V1La
+    expParamFile  = expParamDir+"V1La_expParams.txt"
+    optParamFiles = [optParamDir+"V1La_150GHzOpticalParams.txt"]
+    V1La = Experiment("V1La", expParamFile, optParamFiles)
+
+    #V1La_2mirr
+    expParamFile  = expParamDir+"V1La_2mirr_expParams.txt"
+    optParamFiles = [optParamDir+"V1La_2mirr_150GHzOpticalParams.txt"]
+    V1La_2mirr = Experiment("V1La_2mirr", expParamFile, optParamFiles)
+
+    #V1Lb
+    expParamFile  = expParamDir+"V1Lb_expParams.txt"
+    optParamFiles = [optParamDir+"V1Lb_150GHzOpticalParams.txt"]
+    V1Lb = Experiment("V1Lb", expParamFile, optParamFiles)
+
+    #V1Ld
+    expParamFile  = expParamDir+"V1Ld_expParams.txt"
+    optParamFiles = [optParamDir+"V1Ld_150GHzOpticalParams.txt"]
+    V1Ld = Experiment("V1Ld", expParamFile, optParamFiles)
+    
+    #V1Ld_2mirr
+    expParamFile  = expParamDir+"V1Ld_2mirr_expParams.txt"
+    optParamFiles = [optParamDir+"V1Ld_2mirr_150GHzOpticalParams.txt"]
+    V1Ld_2mirr = Experiment("V1Ld_2mirr", expParamFile, optParamFiles)
+
+    #V1p1L
+    expParamFile  = expParamDir+"V1p1L_expParams.txt"
+    optParamFiles = [optParamDir+"V1p1L_150GHzOpticalParams.txt"]
+    V1p1L = Experiment("V1p1L", expParamFile, optParamFiles)    
+
+    #V1p1L_4KApert
+    expParamFile  = expParamDir+"V1p1L_expParams.txt"
+    optParamFiles = [optParamDir+"V1p1L_4KApert_150GHzOpticalParams.txt"]
+    V1p1L_4KApert = Experiment("V1p1L_4KApert", expParamFile, optParamFiles)    
+
+    #V1p2L
+    expParamFile  = expParamDir+"V1p2L_expParams.txt"
+    optParamFiles = [optParamDir+"V1p2L_150GHzOpticalParams.txt"]
+    V1p2L = Experiment("V1p2L", expParamFile, optParamFiles)
+
+    return V1La, V1La_2mirr, V1Lb, V1Ld, V1Ld_2mirr, V1p1L, V1p1L_4KApert, V1p2L
+
+#Class for handling experimental parameters
+class Experiment:
+    def __init__(self, experimentName, experimentalParamFile, opticalParamFileArr):
         #***** Private variables *****
-        self.__mm     = 1.e-3  #m from mm
-        self.__GHz    = 1.e+9  #GHz from Hz
+        self.__mm     = 1.e-03 #m from mm
+        self.__GHz    = 1.e+09 #GHz from Hz
         self.__aWrtHz = 1.e-18 #aW/rtHz from W/rtHz
         self.__pArtHz = 1.e-12 #pA/rtHz from A/rtHz
-        self.__Hz     = 1.e-9  #Hz from GHz
+        self.__Hz     = 1.e-09 #Hz from GHz
         self.__pW     = 1.e-12 #pW from W
-        #Directory that holds each band's optical parameters
-        self.__opDir = './opticalParams/PB2/'
-        
+
         #***** Public variables *****
         #Experiment name
-        self.name = "PB2"
-        #Psat/Popt factor
-        self.psatFact = 2.5
-        #Minimum allowed Pelec/Popt
-        self.psatMinFact = 2.0
-        #Number of detector modes
-        self.nModes = 1.0
-        #Thermal carrier power index
-        #1.0 for electron, 3.0 for phonon
-        self.n = 3
-        #Bath Temperature [K] from John G. on 2016-09-15
-        self.Tb = 0.280
-        #self.Tb = 0.250
-        #Transition temperature [K] from Toki on 2016-09-15
-        self.Tc = 0.400
-        #self.Tc = 1.710*self.Tb #1.710*Tb for n = 3, 2.140*Tb for n = 1
-        #Total number of detectors
-        #3794 at 90 GHz, 3794 at 150 GHz ; 3794 at 220 GHz and 3794 at 270 GHz
-        self.nDet = 7588
-        #Noise equivalent current [aW/rtHz] from Darcy on 2016-09-15
-        self.nei = 10.*self.__pArtHz
-        #Bolometer operating resistance [Ohm]
-        self.boloR = 1.0
-        #Photon bunching factor
-        self.bf = 1.
+        self.name = experimentName
 
-        #PB2 bands
-        #Number of bands
-        self.numBands = 4
-        #Band ID
-        self.bandIDArr = np.array([0, 1, 2, 3])
-        #Band names 
-        self.bandNameArr = np.array(['wBand', 'dBand', 'sBand', 'qBand'])
+        #Experimental parameters are drawn from the parameter files
+        paramDict = self.__getExpParams(experimentalParamFile)
+        #Psat/Popt factor
+        self.psatFact = paramDict['psatFactor'][0]
+        #Number of detector modes
+        self.nModes = paramDict['numDetectorModes'][0]
+        #Thermal carrier power index
+        self.n = paramDict['thermalCarrierIndex'][0]
+        #Bath Temperature [K]
+        self.Tb = paramDict['bathTemp'][0]
+        #Transition temperature [K]
+        self.Tc = paramDict['criticalTemp'][0]
+        #Noise equivalent current [aW/rtHz]
+        self.nei = paramDict['noiseCurrent'][0]*self.__pArtHz
+        #Bolometer operating resistance [Ohm]
+        self.boloR = paramDict['boloResistance'][0]
+        #Photon bunching factor
+        self.bf = paramDict['photonBunchFactor'][0]
+
         #Band center [Hz]
-        self.bandCenterArr = np.array([89.5, 147.8, 220.0, 270.0])*self.__GHz
+        self.bandCenterArr = paramDict['bandCenter']*self.__GHz
         #Fractional bandwidth
-        self.fbwArr = np.array([0.324, 0.260, 0.200, 0.200])
+        self.fbwArr = paramDict['percentBW']
+        #Number of bands
+        self.numBands = len(self.bandCenterArr)
         #Low frequency [Hz]
         self.loArr = self.bandCenterArr*(1. - 0.5*self.fbwArr)
         #High frequency [Hz]
         self.hiArr = self.bandCenterArr*(1. + 0.5*self.fbwArr)
+        #Optical Parameters
+        self.optParamFiles = opticalParamFileArr
         #Pixel size [m]
-        self.pixSizeArr = np.array([6.8, 6.8, 3.8, 3.8])*self.__mm
+        self.pixSizeArr = paramDict['pixelSize']*self.__mm
         #Number of detectors
-        self.nDetArr = np.array([self.nDet/2., self.nDet/2., self.nDet/2., self.nDet/2.])
+        self.nDetArr = paramDict['numDetectors']
         #Number of pixels
         self.nPixArr = self.nDetArr/2
-        #PWV cuts [mm] as of 2016-09-26
-        self.pwvCutArr = np.array([4.0, 3.5, 3.0, 3.0])
-        #Psat for each band as of 2016-12-07
-        self.psatArr = np.array([8., 14., 20., 26.])*self.__GHz
+        #Detector yield factor
+        self.detYield = paramDict['detYield']
 
-        #Scan strategy as of 2016-09-15
-        #From Neil on 2016-09-15, regarding wedding cake scan strategy
-        #PB2a/b
-        self.__elVals_PB2ab = np.array([30.,         35.2126,     45.5226,    47.7448,    49.967,      50.,         52.1892, 
-                                      54.4114,     55.,         56.6336,    58.8558,    60.,         61.078,      63.3002,    65.5226])
-        self.__elFrac_PB2ab = np.array([10.01971083, 10.02028185, 0.82452597, 0.82452597, 0.82452597,  31.98748368, 0.82452597, 
-                                      0.82452597,  19.85389884, 0.82452597, 0.82452597, 19.87336505, 0.82452597,  0.82452597, 0.82452597])*0.01
-        #PB2c
-        self.__elVals_PB2c = np.array([30.,         35.2126,     45.5226,    47.7448,    49.967,      50.,         52.1892, 
-                                     54.4114,     55.,         56.6336,    58.8558,    60.,         61.078,      63.3002,    65.5226])
-        self.__elFrac_PB2c = np.array([10.01971083, 10.02028185, 0.82452597, 0.82452597, 0.82452597,  31.98748368, 0.82452597, 
-                                     0.82452597,  19.85389884, 0.82452597, 0.82452597, 19.87336505, 0.82452597,  0.82452597, 0.82452597])*0.01
+    #***** Private Functions *****
+    #Function to read in parameter files into a dictionary
+    def __getExpParams(self, file):
+        with open(file, 'r') as doc:
+            dict = {}
+            for line in doc:
+                if '*' in line:
+                    continue
+                if '#' in line:
+                    continue
+                if line.strip(): #Skip empty lines
+                    key       = line.split()[0]
+                    value     = np.array([float(x.strip('[],')) for x in line.split()[2:]])
+                    dict[key] = value
+        return dict
 
-        #Lowest elevation values
-        self.__elCut_PB2ab = self.__elVals_PB2ab[0]
-        self.__elCut_PB2c  = self.__elVals_PB2c[0]
-
-    #***** Public methods *****
-    #For finding the band ID from the central frequency
-    def bandID(self, bandCenter):
-        #If "bandCenter" is in GHz, convert to Hz
-        if bandCenter*1.e-9 < 1.0:
-            bandCenter = bandCenter*1.0e9
-
-        #Round to the nearest GHz
-        GHz = 1.e-9
-        rd = 0
-    
-        #Which band are we analyzing?
-        if   np.round(bandCenter*GHz, rd) == np.round(self.wBandCenter*GHz, rd):
-            return self.dBandID
-        elif np.round(bandCenter*GHz, rd) == np.round(self.dBandCenter*GHz, rd):
-            return self.wBandID
-        elif np.round(bandCenter*GHz, rd) == np.round(self.sBandCenter*GHz, rd):
-            return self.sBandID
-        elif np.round(bandCenter*GHz, rd) == np.round(self.qBandCenter*GHz, rd):
-            return self.qBandID
-        else:
-            print "pb2.whichBand() cannot determine band number. Using '1' for 150 GHz"
-            return 1
-
-    #Retrive band optical parameters, assuming no HWP
-    def bandParams(self, bandID):
-        if   bandID == self.bandIDArr[0]:
-            f = self.__opDir+"wBandOpticalParams.txt"
-        elif bandID == self.bandIDArr[1]:
-            f = self.__opDir+"dBandOpticalParams.txt"
-        elif bandID == self.bandIDArr[2]:
-            f = self.__opDir+"sBandOpticalParams.txt"
-        elif bandID == self.bandIDArr[3]:
-            f = self.__opDir+"qBandOpticalParams.txt"
-        elems             = np.loadtxt(f, dtype=np.str,   usecols=[0],     unpack=True, skiprows=1) 
-        emms, effs, temps = np.loadtxt(f, dtype=np.float, usecols=[1,2,3], unpack=True, skiprows=1)
-        
-        return elems, emms, effs, temps
-    
-    #Retrive band optical parameters, assuming a HWP
-    def bandParams_HWP(self, bandID):
-        if   bandID == self.bandIDArr[1]:
-            f = self.__opDir+"wBandOpticalParams_withHWP.txt"
-        elif bandID == self.bandIDArr[2]:
-            f = self.__opDir+"dBandOpticalParams_withHWP.txt"
-        elif bandID == self.bandIDArr[3]:
-            f = self.__opDir+"sBandOpticalParams_withHWP.txt"
-        elif bandID == self.bandIDArr[4]:
-            f = self.__opDir+"qBandOpticalParams_withHWP.txt"
-        elems             = np.loadtxt(f, dtype=np.str,   usecols=[0],     unpack=True, skiprows=1) 
-        emms, effs, temps = np.loadtxt(f, dtype=np.float, usecols=[1,2,3], unpack=True, skiprows=1)
-        
-        return elems, emms, effs, temps
-
-    #Method to return PWV cut for each band
-    def pwvCut(self):
-        return self.__wPwvCut, self.__dPwvCut, self.__sPwvCut, self.__qPwvCut
-
-    #Method to return El cut for PB2ab and PB2c
-    def elCut(self):
-        return self.__elCut_PB2ab, self.__elCut_PB2c
-    
-    #Function that returns elevation pdf for PB2ab and PB2c
-    def elBaseDist(self):
-        return self.__elVals_PB2ab, self.__elFrac_PB2ab, self.__elVals_PB2c, self.__elFrac_PB2c
-
-    #Method for return the CES elevation distribution for PB2ab and PB2c
-    def elDist(self, nSamples=100):
-        return np.random.choice(self.__elVals_PB2ab,  size=nSamples, p=self.__elFrac_PB2ab), np.random.choice(self.__elVals_PB2c,  size=nSamples, p=self.__elFrac_PB2c)
-
-    #Method to return data selection efficiency vs PWV
-    def dsVsPwv(self, pwv):
-        return 1.0 - 0.072*pwv
+    #***** Public Functions *****
+    #Function to get band optical parameters
+    def getOpticalParams(self, bandNum):
+        elemArr                 = np.loadtxt(self.optParamFiles[bandNum], dtype=np.str,   usecols=[0],     unpack=True, skiprows=1)
+        emmArr, effArr, tempArr = np.loadtxt(self.optParamFiles[bandNum], dtype=np.float, usecols=[1,2,3], unpack=True, skiprows=1)
+        return elemArr, emmArr, effArr, tempArr

@@ -153,20 +153,23 @@ class Noise:
         return nep/(np.sqrt(2.)*dpdt)
 
     #Array noise equivalent temperature [K-rtSec]
-    def NETarr(self, net, nDet=None):
+    def NETarr(self, net, nDet=None, detYield=None):
         if nDet == None:
             nDet = self.__pb2.nDet
+        if detYield == None:
+            detYield = 1.0
         
-        return net/np.sqrt(nDet)
+        return net/np.sqrt(nDet*detYield)
     
     #Sky sensitivity [K-arcmin]
     def sensitivity(self, netArr, fsky, tobs):
         return np.sqrt((4.*self.__ph.PI*fsky*2.*np.power(netArr, 2.))/tobs)*(10800./self.__ph.PI)
 
     #Mapping speed [(K^2*sec)^-1]
-    def mappingSpeed(self, net, nDet=None):
+    def mappingSpeed(self, net, nDet=None, detYield=None):
         if nDet == None:
             nDet = self.__pb2.nDet
+        if detYield == None:
+            detYield = 1.0
 
-        return 1./np.power(self.NETarr(net, nDet), 2.)
-
+        return detYield/np.power(self.NETarr(net, nDet), 2.)

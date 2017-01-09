@@ -1,4 +1,4 @@
-ElemName	Emiss	Effic	Temp
+ElemName	Emiss	Effic	Temp [K]
 CMB		1.000	1.000	2.725	
 Atmosphere	0.025	0.975	250.0
 PrimMirror	0.015	0.985	260.0
