@@ -1,0 +1,78 @@
+##########################
+
+'CHillCalc' was  written in full by Charles Hill at UC Berkeley
+Publish date = 2016-12-07
+Latest revision = 2.0
+Latest revision date = 2017-01-08
+
+##########################
+
+REVISION HISTORY
+
+* 2.0 on 2017-01-08 -- upgraded to take configuration files for arbitrary experiments. Now, nothing about a CMB instrument is hardcoded - all information is taken from config files
+* 1.0 on 2016-12-07 -- a stripped-down version of the sensitivity portion of Charlie's personal sensitivity code, meant only to calculate NET and MS for Simons Observatory
+
+##########################
+
+OVERVIEW
+
+CHillCalc is designed to take input parameters for an experiment and return NET and Mapping Speed for that experiment. It's been primarily used for POLARBEAR-2 and LiteBIRD forecasting, but it can make white-noise estimates for any experiment.
+
+##########################
+
+SOURCE CODE
+
+There are four python modules that are located in the './src/' directory. These are importable modules and are not capable of being executed.
+
+-- physics.py contains the 'Physics' class, which is responsible for calculating generic physical quantities, such as blackbody spectra. 
+-- experiment.py contains the 'Experiment' class, which constructs a CMB Experiment object. It also contains functions which can be called with no argument to return objects for common instruments, such as 'PB2()', 'ACTPol()', and the various 'SO_V1()' designs
+-- noise.py contains the 'Noise' class, which is reponsible for calculating NEPs, NETs, Mapping Speed, and Sensitivity in uK-arcmin
+-- calculation.py contains the 'Calculation' class, which does common sensitivity calculations, such as NEP/NET/MS, Psat, and optical power
+
+##########################
+
+EXPERIMENTAL PARAMETER FILES
+
+Within the directory 'experimentParams' you can find the PB2, ACTPol, and various SO V1 experimental parameter configuration files which contain bolometer parameters, frequency band information, etc. These files are imported by the 'Calculation' class when performing NET estimates.
+
+##########################
+
+OPTICAL PARAMETER FILES
+
+Within the directory 'opticalParams' you can find the PB2 and ACTPol optical tables, which contain the emissivity, efficiency, and temperature of each element within the optical chain for each experiment. These files are imported by the 'Calculation' class when performing NET estimates.
+
+##########################
+
+EXECUTABLES
+
+As of version 2.0:
+
+-- PB2Sensitivity.py outputs a table to the './TXT' directory which presents the relevant sensitivity parameters for each PB2 band.
+-- ACTPolSensitivity.py outputs a table to the './TXT' directory which presents the relevant sensitivity parameters for each ACTPol band.
+-- SOV1Sensitivity.py outputs tables for each SO V1 design to the './TXT' directory which presents the relevant sensitivity parameters for each SO V1 band.
+
+##########################
+
+SETTING THE ENVIRONMENT
+
+Before running any executables, you must set the environment.
+
+If you are using bash, run the command:
+'source env.sh'
+
+and if you are running tcsh:
+'source env.csh'
+
+##########################
+
+BUILDING YOUR OWN EXPERIMENT
+
+There are a few steps that you must follow in order to build your own experiment and calculate the sensitivity forcast for it
+
+** Create (or update) the experimental parameters within the files at './experimentParams/'. These files are text tables that contain the bolometer parameters and frequency band information. To update a parameter, just change the value within this file directly. These values are then imported into your 'experiment.py' class when calculations are run.
+
+** Create (or update) the optical parameters within the files at './opticalParams/'. These files are text tables that contain the emissivity, efficiency, and temperature of each element within the optical chain. If you want ot update the value for a given element (perhaps due to a better-measured loss tangent or improved cooling), edit the corresponding value for (perhaps for each observation band) directly within these tables. These values are then imported by the your 'experiment.py' class  when calculations are run.
+
+** Crate an executable at the cwd './' to generate a sensitivity table for your experiment. Be sure that the format and syntax is exactly the same as for 'PB2Sensitivity.py'
+
+##########################

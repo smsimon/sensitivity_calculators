@@ -1,0 +1,15 @@
+**Parameter**		**Units**	**Value**
+psatFactor		NA		3.0
+numDetectorModes	NA		1.0
+thermalCarrierIndex	NA		2.7
+bathTemp		[K]		0.100
+criticalTemp		[K]		0.159	
+noiseCurrent		[pA/rtHz]	0.0
+boloResistance		[Ohms]		1.0
+photonBunchFactor	NA		1.0
+bandCenter		[GHz]		[147.0]
+percentBW		NA		[0.260]
+pixelSize		[mm]		[5.3]
+#numDetectors		NA		[53376]
+numDetectors		NA		[49236]
+detYield		NA		0.7
