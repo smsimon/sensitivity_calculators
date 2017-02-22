@@ -71,7 +71,7 @@ class Channel:
         #Bolometer resistance
         self.boloR = self.__float(channelDict['boloR'])
         
-        #Gemerate optical arrays
+        #Generate optical arrays
         self.genOptics()
 
     #***** Private Functions *****
@@ -93,6 +93,7 @@ class Channel:
         for opt in self.__opticalChain.opticArr:
             #Get element name
             elem = opt.element
+
             #Get element emissivity
             if opt.absorb != 'NA':
                 if opt.absorbFreq != 'NA':
@@ -106,6 +107,19 @@ class Channel:
                     emiss = 1. - self.__ph.spillEff(self.pixSize, self.Fnumber, self.wf, self.bandCenter)
                 else:
                     emiss = self.__ph.dielectricLoss(opt.lossTan, opt.thick, opt.index, self.bandCenter)
+            
+            #Get element spillover
+            if opt.spill != 'NA':
+                spill = opt.spill
+            else:
+                spill = 0.
+                
+            #Get spillover temperature
+            if opt.spillTemp != 'NA':
+                spillTemp = opt.spillTemp
+            else:
+                spillTemp = opt.temp
+                
             #Get element reflection
             if opt.refl != 'NA':
                 refl = opt.refl
@@ -116,24 +130,27 @@ class Channel:
                     refl = 0.
                 else:
                     refl = 0.
+
             #Get element scattering
-            if opt.scattFrac == 'NA':
-                scatt = 0.
-            else:
+            if opt.scattFrac != 'NA':
                 scatt = opt.scattFrac*refl
-            #Get scattering temperature
-            if opt.scattTemp == 'NA':
-                scattTemp = self.Tb
             else:
+                scatt = 0.
+
+            #Get scattering temperature
+            if opt.scattTemp != 'NA':
                 scattTemp = opt.scattTemp
-            #Get temperature
+            else:
+                scattTemp = self.Tb
+
+            #Get element temperature
             temp = opt.temp
             
             #Store parameters
             elemArr.append(elem)
             tempArr.append(temp)
-            emissArr.append(emiss + scatt*self.__powFrac(scattTemp, temp, self.bandCenter, self.fbw))
-            effArr.append(1. - refl - emiss)
+            emissArr.append(emiss + scatt*self.__powFrac(scattTemp, temp, self.bandCenter, self.fbw) + spill*self.__powFrac(spillTemp, temp, self.bandCenter, self.fbw))
+            effArr.append(1. - refl - emiss - spill)
 
         return elemArr, emissArr, effArr, tempArr
 

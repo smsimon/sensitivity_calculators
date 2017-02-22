@@ -28,6 +28,10 @@ class Optic:
         self.absorb = self.__float(opticDict['Absorb'])
         #Absorption frequency
         self.absorbFreq = self.__float(opticDict['AbsorbFreq'], self.__GHz)
+        #Spillover
+        self.spill = self.__float(opticDict['Spill'])
+        #Temperature that the spillover lands on
+        self.spillTemp = self.__float(opticDict['SpillTemp'])
         #Surface Roughness
         self.surfaceRough = self.__float(opticDict['SurfaceRough'], self.__um)
         #Reflection

@@ -22,7 +22,7 @@ class Optimize:
     #***** Public Methods *****
     def optimizeFP(self):
         #Pixel sizes to be considered
-        pixSizes = np.arange(0.5, 7.0, .1)*self.__mmToM
+        pixSizes = np.arange(0.5, 10.0, .2)*self.__mmToM
         #Merge pixel dictionaries from all telescopes
         self.pixels = {}
         for t in self.__exp.telescopes: 
@@ -47,7 +47,7 @@ class Optimize:
                 plt.plot(pixSizes*self.__mToMm, np.array(msArr)*self.__uK2, linewidth=self.__lw, label='%.1f GHz' % (ch.bandCenter*self.__GHz))
             yArr = np.sum(msArrArr,axis=0)
             plt.plot(pixSizes*self.__mToMm, yArr*self.__uK2, linewidth=self.__lw, label='Combined')
-            plt.title('%s, Pixel %s' % (self.__exp.name, pix))
+            plt.title('%s, Pixel %s, F/# = %.2f' % (self.__exp.name, pix, chans[0].Fnumber))
             plt.xlabel('Pixel Size [mm]')
             #plt.ylabel('Normalized Mapping Speed')
             plt.ylabel('Mapping Speed [(uK^2 s)^-1]')

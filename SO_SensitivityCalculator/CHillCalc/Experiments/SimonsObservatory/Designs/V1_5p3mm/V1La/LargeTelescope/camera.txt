@@ -1,4 +1,3 @@
-#*****LFT telescope-specific parameters*****
 #
 Parameter			Unit	Value	Comment
 OpticalCouplingToFP		NA	1.00	

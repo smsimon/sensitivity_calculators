@@ -12,7 +12,7 @@ atmFile = './Atacama_1000um_60deg.txt'
 
 #Gather experiments
 designDirs = sorted(gb.glob('./Designs/*/'))
-experiments = [exp.Experiment(dir) for dir in designDirs]
+experiments = [exp.Experiment(dir, atmFile) for dir in designDirs]
 displays    = [dsp.Display(experiment) for experiment in experiments]
 #optimizes   = [opt.Optimize(experiment) for experiment in experiments]
 for i in range(len(designDirs)):

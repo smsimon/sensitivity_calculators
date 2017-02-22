@@ -2,5 +2,5 @@
 #
 BandID   PixelID   BandCenter   FBW   PixSize   NumDet   WaistFact   DetEff   Psat   PsatFact   CarrierIndex   TransTemp   TcFrac   BunchFactor   Yield   NEI         nModes   boloR
 #	 NA	   [GHz]        NA    [mm]      NA	 NA	     NA	      [pW]   NA	        NA	       [K]	   NA  	    NA		  NA      [aW/rtHz]   NA       [Ohms]
-1	 1	   94.3	        0.306 4.92      14528	 3.0	     0.7      NA     3.0	2.7	       0.159	   NA	    1.0		  0.7     0.0	      1.0      1.0
-2	 1	   147.0	0.260 4.92      14528	 3.3	     0.7      NA     3.0	2.7	       0.159	   NA	    1.0		  0.7	  0.0	      1.0      1.0
+1	 1	   94.3	        0.306 6.37      14538	 3.0	     0.7      NA     3.0	2.7	       0.159	   NA	    1.0		  0.7     0.0	      1.0      1.0
+2	 1	   147.0	0.260 6.37      14538	 3.3	     0.7      NA     3.0	2.7	       0.159	   NA	    1.0		  0.7	  0.0	      1.0      1.0

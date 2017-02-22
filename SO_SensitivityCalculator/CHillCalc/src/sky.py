@@ -86,5 +86,5 @@ class Sky:
             emissArr += [self.Aatm]
             effArr   += [self.Eatm]
             tempArr  += [self.Tatm]
-            
+        
         return elemArr, emissArr, effArr, tempArr
