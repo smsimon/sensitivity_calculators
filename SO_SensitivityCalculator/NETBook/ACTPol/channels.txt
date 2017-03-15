@@ -1,0 +1,7 @@
+r#*****Detector channels*****
+#
+BandID	PixelID	CntrFrq	FBW	PixSize	NumDet	WstFct	DetEff	Psat	S	n	Tb	TcFrac	BF	Yield	NEI	nModes	boloR
+#	NA	[GHz]	NA	mm	NA	NA	NA	[pW]	NA	NA	[K]	NA	NA	NA    [aW/rtHz]	NA	[Ohms]			
+1	1	145.0	0.23448	NA	1024	NA	0.7	NA	3.0	2.7	0.1	NA	1.0	0.7	0.0	1.0	1.0		
+
+
