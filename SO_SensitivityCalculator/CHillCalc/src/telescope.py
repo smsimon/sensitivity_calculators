@@ -17,7 +17,6 @@ class Telescope:
         self.dir = dir
         self.name = dir.rstrip('/').split('/')[-1]
         self.camera = cm.Camera(self.__cameraFile)
-        self.opticalChain = oc.OpticalChain(self.__opticalChainFile)
         #Unpack channel file
         output = np.loadtxt(self.__channelFile, dtype=np.str)
         keyArr = output[0]
@@ -28,7 +27,7 @@ class Telescope:
             dict = {}
             for i in range(len(keyArr)):
                 dict[keyArr[i]] = elem[i]
-            self.chanArr.append(ch.Channel(dict, self.camera, self.opticalChain, atmFile))
+            self.chanArr.append(ch.Channel(dict, self.camera, self.__opticalChainFile, atmFile))
         self.numChans = len(self.chanArr)
         #Gather channels into pixels
         self.pixels = {}

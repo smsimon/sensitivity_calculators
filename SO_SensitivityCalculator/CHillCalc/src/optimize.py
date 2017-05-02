@@ -4,6 +4,7 @@
 import numpy as np
 import calculate as calc
 import matplotlib.pyplot as plt
+import physics as ph
 
 class Optimize:
     def __init__(self, exp):
@@ -14,6 +15,7 @@ class Optimize:
         self.__uK2   = 1.e-12
         self.__exp   = exp
         self.__clc   = calc.Calculate(self.__exp)
+        self.__ph    = ph.Physics()
         #Set plotting parameters
         plt.rc('font', size=32)
         plt.rc('font', family='serif')
@@ -21,8 +23,7 @@ class Optimize:
         
     #***** Public Methods *****
     def optimizeFP(self):
-        #Pixel sizes to be considered
-        pixSizes = np.arange(0.5, 10.0, .2)*self.__mmToM
+        pixSizesFnum = np.arange(0.000001, 3.050001, 0.05)
         #Merge pixel dictionaries from all telescopes
         self.pixels = {}
         for t in self.__exp.telescopes: 
@@ -32,9 +33,14 @@ class Optimize:
         for pix in self.pixels:
             plt.figure(figsize=(15,12))
             msArrArr = []
+            corrmsArrArr = []
             chans = self.pixels[pix]
+            freqStr = ''
             for ch in chans:
+                freqStr += '%d_' % (int(ch.bandCenter*1.e-9))
+                pixSizes = pixSizesFnum*ch.Fnumber*self.__ph.lamb(ch.bandCenter)
                 msArr = []
+                corrmsArr = []
                 origSize   = ch.pixSize
                 origDetNum = ch.numDet
                 for size in pixSizes:
@@ -42,15 +48,27 @@ class Optimize:
                     ch.numDet  = origDetNum*(origSize/size)**2
                     ch.genOptics()
                     msArr.append(self.__clc.calcMappingSpeed(ch)[10])
+                    corrmsArr.append(self.__clc.calcMappingSpeed(ch,corr=True)[10])
                 msArrArr.append(np.array(msArr))
-                #plt.plot(pixSizes*self.__mToMm, np.array(msArr)/np.amax(np.array(msArr)), linewidth=self.__lw, label='%.1f GHz' % (ch.bandCenter*self.__GHz))
-                plt.plot(pixSizes*self.__mToMm, np.array(msArr)*self.__uK2, linewidth=self.__lw, label='%.1f GHz' % (ch.bandCenter*self.__GHz))
-            yArr = np.sum(msArrArr,axis=0)
-            plt.plot(pixSizes*self.__mToMm, yArr*self.__uK2, linewidth=self.__lw, label='Combined')
-            plt.title('%s, Pixel %s, F/# = %.2f' % (self.__exp.name, pix, chans[0].Fnumber))
-            plt.xlabel('Pixel Size [mm]')
+                corrmsArrArr.append(np.array(corrmsArr))
+                p1 = plt.plot(pixSizesFnum, np.array(msArr)*self.__uK2, linewidth=self.__lw, label='%.1f GHz' % (ch.bandCenter*self.__GHz))
+                p2 = plt.plot(pixSizesFnum, np.array(corrmsArr)*self.__uK2, linewidth=self.__lw, color=p1[0].get_color(), linestyle='--')
+            #yArr = np.sum(msArrArr,axis=0)
+            #corryArr = np.sum(corrmsArrArr,axis=0)
+            #p1 = plt.plot(pixSizesFnum, yArr*self.__uK2, linewidth=self.__lw, label='Combined')
+            #p2 = plt.plot(pixSizesFnum, corryArr*self.__uK2, linewidth=self.__lw, color=p1[0].get_color(), linestyle='--')
+            #Plot phantom lines for legend
+            plt.plot(pixSizesFnum, [-1. for x in pixSizesFnum], color='k', linestyle='-', label='Uncorr', linewidth=self.__lw)
+            plt.plot(pixSizesFnum, [-1. for x in pixSizesFnum], color='k', linestyle='--', label='Corr', linewidth=self.__lw)
+            #plt.ylim([0., np.amax(yArr*self.__uK2)*(1+0.1)])
+            plt.ylim([0., np.amax(np.array(msArrArr)*self.__uK2)*(1+0.1)])
+            plt.xlim([0., np.amax(pixSizesFnum)])
+            plt.title('%s, Pixel %s, F/# = %.1f' % (self.__exp.name, pix, ch.Fnumber))
+            plt.xlabel('Pixel Size [F-lambda]')
             #plt.ylabel('Normalized Mapping Speed')
             plt.ylabel('Mapping Speed [(uK^2 s)^-1]')
             plt.legend(loc='best', fontsize=24)
-            plt.savefig('%s/Pixel_%s_optimize.jpg' % (self.__exp.dir, pix))
+            plt.savefig('%s/Pixel_%d_%soptimize.jpg' % (self.__exp.dir, int(pix), freqStr))
             figNum += 1
+            #Save data to text file
+            np.savetxt('%s/Pixel_%d_%soptimize.txt' % (self.__exp.dir, int(pix), freqStr), np.array([pixSizesFnum.tolist()] + (np.array(msArrArr)*self.__uK2).tolist() + (np.array(corrmsArrArr)*self.__uK2).tolist()).T, fmt='%-10.5f', header='DetSpace [F-lamb],  MS w/o Corr [uK^-2 s^-1],  MS w/ Corr [uK^-2 s^-1]')

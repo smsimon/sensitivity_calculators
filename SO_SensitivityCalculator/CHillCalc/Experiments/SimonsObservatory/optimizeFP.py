@@ -6,11 +6,14 @@ import experiment as exp
 import optimize as opt
 import glob as gb
 
+#Define which design to calculate
+designDir = './Designs/V2_dichroic/'
+
 #Define the atmosphere
 atmFile = './Atacama_1000um_60deg.txt'
 
 #Gather experiments
-designDirs  = sorted(gb.glob('./Designs/V1_5p3mm/*'))
+designDirs  = sorted(gb.glob(designDir))
 experiments = [exp.Experiment(dir) for dir in designDirs]
 
 #Optimize pixel sizes

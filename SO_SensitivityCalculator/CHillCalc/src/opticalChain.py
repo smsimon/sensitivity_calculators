@@ -5,7 +5,7 @@ import numpy as np
 import optic as op
 
 class OpticalChain:
-    def __init__(self, opticalChainFile):
+    def __init__(self, opticalChainFile, bandID=1):
         #Read in the configuration file
         output = np.loadtxt(opticalChainFile, dtype=np.str)
         keyArr = output[0]
@@ -16,4 +16,4 @@ class OpticalChain:
             dict = {}
             for i in range(len(keyArr)):
                 dict[keyArr[i]] = elem[i]
-            self.opticArr.append(op.Optic(dict))
+            self.opticArr.append(op.Optic(dict, bandID))

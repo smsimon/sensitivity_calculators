@@ -4,12 +4,13 @@
 import numpy as np
 
 class Optic:
-    def __init__(self, opticDict):
+    def __init__(self, opticDict, bandID=1):
         #***** Private Variables *****
         self.__mm  = 1.e-03
         self.__Spm = 1.e+06
         self.__um  = 1.e-06
         self.__GHz = 1.e+09
+        self.__bid = bandID
         
         #***** Public Variables *****
         #Element name
@@ -23,11 +24,11 @@ class Optic:
         #Loss Tangent
         self.lossTan = self.__float(opticDict['LossTan'], 1.e-4)
         #Conductivity
-        self.conductivity = self.__float(opticDict['Conductivity'], self.__Spm)
+        self.conductivity = self.__float(opticDict['Conduct'], self.__Spm)
         #Absorption
         self.absorb = self.__float(opticDict['Absorb'])
         #Absorption frequency
-        self.absorbFreq = self.__float(opticDict['AbsorbFreq'], self.__GHz)
+        #self.absorbFreq = self.__float(opticDict['AbsorbFreq'], self.__GHz) #Retired 2017-04-12
         #Spillover
         self.spill = self.__float(opticDict['Spill'])
         #Temperature that the spillover lands on
@@ -46,4 +47,7 @@ class Optic:
         try:
             return unit*float(val)
         except:
-            return str(val)
+            try:
+                return unit*float(np.array(eval(val))[self.__bid-1])
+            except:
+                return str(val)

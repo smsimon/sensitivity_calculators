@@ -8,6 +8,7 @@ import numpy as np
 import scipy.integrate as itg
 import physics as phy
 import experiment as exp
+import pickle as pkl
 
 #Class for noise
 class Noise:
@@ -19,13 +20,60 @@ class Noise:
         self.__skyEff = 1.
         #Bunching factor
         self.__bf = 1.
-        
+
+        #Correlation files
+        dir = '/'.join(__file__.split('/')[:-1])+'/detCorrFiles/PKL/'
+        self.p_c_apert, self.c_apert = pkl.load(open(dir+'coherentApertCorr.pkl',   'rb'))
+        self.p_c_stop,  self.c_stop  = pkl.load(open(dir+'coherentStopCorr.pkl',    'rb'))
+        self.p_i_apert, self.i_apert = pkl.load(open(dir+'incoherentApertCorr.pkl', 'rb'))
+        self.p_i_stop,  self.i_stop  = pkl.load(open(dir+'incoherentStopCorr.pkl',  'rb'))
+        self.DetP = self.p_c_apert
+        #Correlation factor for hex packing
+        #self.corrFact = 3
+        self.corrFact = 6
+
     #Photon noise equivalent power on a diffraction-limited detector [W/rtHz]
-    def photonNEP(self, poptArr, freq, fbw, bf=1.0):
+    def photonNEP(self, poptArr, freq, fbw, elemArr=None, nDet=None, detPitchFlamb=None):
         freq1, freq2 = self.__ph.bandEdges(freq, fbw)
         popt  = lambda f: sum([x(f) for x in poptArr])
-        popt2 = lambda f: sum([x(f)*y(f) for x in poptArr for y in poptArr])
-        return np.sqrt(itg.quad(lambda x: 2*self.__ph.h*x*popt(x) + 2*bf*popt2(x), freq1, freq2)[0])
+        
+        #Don't consider correlations
+        if elemArr == None and nDet == None:
+            popt2  = lambda f: sum([x(f)*y(f) for x in poptArr for y in poptArr])
+            nep    = np.sqrt(itg.quad(lambda x: 2*self.__ph.h*x*popt(x) + 2*popt2(x), freq1, freq2)[0])
+            neparr = nep
+            return nep, neparr
+        #Consider correlations
+        else:
+            FlambMax = 3. #Look for correlations out to this length scale
+            ndets = int(round(FlambMax/float(detPitchFlamb), 0))
+            inds1 = [np.argmin(abs(np.array(self.DetP) - detPitchFlamb*(n+1)            )) for n in range(ndets)]
+            inds2 = [np.argmin(abs(np.array(self.DetP) - detPitchFlamb*(n+1)*np.sqrt(3.))) for n in range(ndets)]
+            inds  = np.sort(inds1 + inds2)
+            c_apert = np.sum([abs(self.c_apert)[ind] for ind in inds])
+            i_apert = np.sum([abs(self.c_apert)[ind] for ind in inds])
+            i_stop  = np.sum([abs(self.c_stop)[ ind] for ind in inds])
+            c_apert  = np.sqrt(c_apert*self.corrFact + 1.)
+            i_apert  = np.sqrt(i_apert*self.corrFact + 1.)
+            i_stop   = np.sqrt(i_stop*self.corrFact  + 1.)
+            atDet = False
+            factors = []
+            for i in range(len(elemArr)):
+                if 'CMB' in elemArr[i]:
+                    factors.append(c_apert)
+                if ('Apert' in elemArr[i]) or ('Lyot' in elemArr[i]) or ('Stop' in elemArr[i]):
+                    factors.append(i_stop)
+                    atDet = True
+                elif not atDet:
+                    factors.append(i_apert)
+                else:
+                    factors.append(1.)
+            factors = np.array(factors[:-1])
+            popt2    = lambda f: sum([poptArr[i](f)*poptArr[j](f)                       for i in range(len(poptArr)) for j in range(len(poptArr))])
+            popt2arr = lambda f: sum([factors[i]*factors[j]*poptArr[i](f)*poptArr[j](f) for i in range(len(poptArr)) for j in range(len(poptArr))])
+            nep    = np.sqrt(itg.quad(lambda x: 2*self.__ph.h*x*popt(x) + 2*popt2(x),    freq1, freq2)[0])
+            neparr = np.sqrt(itg.quad(lambda x: 2*self.__ph.h*x*popt(x) + 2*popt2arr(x), freq1, freq2)[0])
+            return nep, neparr
 
     #8% overestimate of photon noise equivalent power on a diffraction-limited detector [W/rt(Hz)]
     def photonNEPapprox(self, pow, freq, fbw, bf=1.0):

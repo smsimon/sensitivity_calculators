@@ -8,11 +8,12 @@ import physics as phy
 import noise as nse
 
 class Calculate:
-    def __init__(self, exp):
+    def __init__(self, exp, corr=False):
         #***** Private variables *****
         self.__ph  = phy.Physics()
         self.__nse = nse.Noise()
         self.__exp = exp
+        self.__corr = corr
 
         #Unit conversions
         self.__GHz    = 1.e-09
@@ -98,21 +99,34 @@ class Calculate:
             cumPower += self.__ph.bbPower(elemEmm*cumEff, ch.bandCenter, ch.fbw, elemTemp, ch.nModes)
             #Add cumulative power integrand to array for each element
             cumPowerIntegrands.append(lambda f, elemEmm=elemEmm, cumEff=cumEff, elemTemp=elemTemp, nModes=ch.nModes: self.__ph.bbPowSpec(elemEmm*cumEff, f, elemTemp, ch.nModes))
+            #cumPowerIntegrands.append(lambda f: self.__ph.bbPowSpec(elemEmm*cumEff, f, elemTemp))
         #Photon NEP
-        NEP_ph    = self.__nse.photonNEP(cumPowerIntegrands, ch.bandCenter, ch.fbw)
+        NEP_ph, NEP_pharr = self.__nse.photonNEP(cumPowerIntegrands, ch.bandCenter, ch.fbw)
         
         #Return optical power and photon noise
-        return cumPower, NEP_ph
+        return cumPower, NEP_ph, NEP_pharr
 
     #Calculate mapping speed [(K^2-sec)^-1]
-    def calcMappingSpeed(self, ch):
+    def calcMappingSpeed(self, ch, corr=None):
+        if not corr:
+            corr = self.__corr
         #Need an extra efficiency for the calculation
         effArr = np.insert(ch.effArr, len(ch.effArr), 1.0)
         #Efficiency of full optical path
         skyEff = reduce(lambda x, y: float(x)*float(y), effArr) 
 
         #Photon noise and optical power
-        cumPower, NEP_ph = self.calcPhotonNEP(ch)
+        if corr:
+            cumPower = self.calcPhotonNEP(ch)[0]
+            cumPowerIntegrands = []
+            for j in range(len(ch.elemArr)):
+                elemEmm = float(ch.emissArr[j])
+                cumEff = float(np.prod(effArr[j+1:]))
+                elemTemp = float(ch.tempArr[j]);
+                cumPowerIntegrands.append(lambda f, elemEmm=elemEmm, cumEff=cumEff, elemTemp=elemTemp, nModes=ch.nModes: self.__ph.bbPowSpec(elemEmm*cumEff, f, elemTemp))
+            NEP_ph, NEP_pharr           = self.__nse.photonNEP(cumPowerIntegrands, ch.bandCenter, ch.fbw, ch.elemArr, ch.numDet, (ch.pixSize/(ch.Fnumber*self.__ph.lamb(ch.bandCenter))))
+        else:
+            cumPower, NEP_ph, NEP_pharr = self.calcPhotonNEP(ch)            
         NET_ph = self.__nse.NETfromNEP(NEP_ph, ch.bandCenter, ch.fbw, skyEff)
         #Bolometer noise
         if ch.psat == 'NA':
@@ -130,13 +144,15 @@ class Calculate:
                 NEP_rd = self.__nse.readoutNEP(ch.psat, boloR, nei)
         NET_rd = self.__nse.NETfromNEP(NEP_rd, ch.bandCenter, ch.fbw, skyEff)
         #Total noise
-        NEP = np.sqrt(NEP_ph**2 + NEP_bolo**2 + NEP_rd**2)
-        NET = self.__nse.NETfromNEP(NEP, ch.bandCenter, ch.fbw, skyEff)*self.__exp.netMgn
+        NEP     = np.sqrt(NEP_ph**2    + NEP_bolo**2 + NEP_rd**2)
+        NEP_arr = np.sqrt(NEP_pharr**2 + NEP_bolo**2 + NEP_rd**2)
+        NET     = self.__nse.NETfromNEP(NEP,     ch.bandCenter, ch.fbw, skyEff)*self.__exp.netMgn
+        NET_arr = self.__nse.NETfromNEP(NEP_arr, ch.bandCenter, ch.fbw, skyEff)*self.__exp.netMgn
         #NET array
-        NETarr = self.__nse.NETarr(NET, ch.numDet, ch.detYield)
+        NETarr = self.__nse.NETarr(NET_arr, ch.numDet, ch.detYield)
         #Sensitivity
         Sens = self.__nse.sensitivity(NETarr, self.__exp.fsky, self.__exp.tobs*self.__exp.obsEff)
         #Mapping speed
-        MS = self.__nse.mappingSpeed(NET, ch.numDet, ch.detYield)
+        MS = self.__nse.mappingSpeed(NET_arr, ch.numDet, ch.detYield)
 
         return cumPower, NEP_ph, NEP_bolo, NEP_rd, NEP, NET_ph, NET_bolo, NET_rd, NET, NETarr, MS, Sens

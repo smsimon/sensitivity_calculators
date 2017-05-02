@@ -7,11 +7,11 @@ import calculate as clc
 
 #Class for outputting calculations to tables and plots
 class Display:
-    def __init__(self, exp):
+    def __init__(self, exp, corr=False):
         #***** Private variables*****
         self.__ph  = ph.Physics() 
         self.__exp = exp
-        self.__clc = clc.Calculate(self.__exp)
+        self.__clc = clc.Calculate(self.__exp, corr)
         self.__freq   = []
         self.__fbw    = []
         self.__numDet = []

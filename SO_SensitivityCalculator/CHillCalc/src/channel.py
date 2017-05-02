@@ -5,11 +5,12 @@
 #python Version 2.7.2
 import numpy as np
 import physics as ph
+import opticalChain as oc
 import sky
 
 #Class for handling a given frequency channel
 class Channel:
-    def __init__(self, channelDict, camera, opticalChain, atmFile=None):
+    def __init__(self, channelDict, camera, opticalChainFile, atmFile=None):
         #***** Private variables *****
         self.__mm     = 1.e-03 #m from mm
         self.__GHz    = 1.e+09 #GHz from Hz
@@ -17,10 +18,10 @@ class Channel:
         self.__pArtHz = 1.e-12 #pA/rtHz from A/rtHz
         self.__Hz     = 1.e-09 #Hz from GHz
         self.__pW     = 1.e-12 #pW from W
-        self.__camera       = camera
-        self.__opticalChain = opticalChain
-        self.__ph           = ph.Physics()
-        self.__sky          = sky.Sky(atmFile)
+        self.__camera           = camera
+        self.__opticalChainFile = opticalChainFile
+        self.__ph               = ph.Physics()
+        self.__sky              = sky.Sky(atmFile)
         
         #***** Camera Parameters *****
         #Optical coupling to Focal Plane
@@ -32,9 +33,9 @@ class Channel:
 
         #***** Channel Parameters *****
         #Band ID
-        self.bandID = channelDict['BandID']
+        self.bandID = self.__float(channelDict['BandID'])
         #Pixel ID
-        self.pixelID = channelDict['PixelID']
+        self.pixelID = self.__float(channelDict['PixelID'])
         #Band Center
         self.bandCenter = self.__float(channelDict['BandCenter'], self.__GHz)
         #Fractional Bandwidth
@@ -65,11 +66,14 @@ class Channel:
         #Detector yield
         self.detYield = self.__float(channelDict['Yield'])
         #Noise equivalent current
-        self.nei = self.__float(channelDict['NEI'], self.__aWrtHz)
+        self.nei = self.__float(channelDict['NEI'], self.__pArtHz)
         #Number of modes
         self.nModes = self.__float(channelDict['nModes'])
         #Bolometer resistance
         self.boloR = self.__float(channelDict['boloR'])
+
+        #***** Optical Chain *****
+        self.opticalChain = oc.OpticalChain(self.__opticalChainFile, self.bandID)
         
         #Generate optical arrays
         self.genOptics()
@@ -90,16 +94,13 @@ class Channel:
         emissArr = []
         effArr = []
         tempArr = []
-        for opt in self.__opticalChain.opticArr:
+        for opt in self.opticalChain.opticArr:
             #Get element name
             elem = opt.element
 
             #Get element emissivity
             if opt.absorb != 'NA':
-                if opt.absorbFreq != 'NA':
-                    emiss = opt.absorb*(self.bandCenter/opt.absorbFreq)
-                else:
-                    emiss = opt.absorb
+                emiss = opt.absorb
             else:
                 if opt.element == 'Mirror':
                     emiss = 1. - self.__ph.ohmicEff(opt.conductivity, self.bandCenter)
@@ -149,6 +150,10 @@ class Channel:
             #Store parameters
             elemArr.append(elem)
             tempArr.append(temp)
+            #print emiss
+            #print scatt
+            #print scattTemp
+            #print spill
             emissArr.append(emiss + scatt*self.__powFrac(scattTemp, temp, self.bandCenter, self.fbw) + spill*self.__powFrac(spillTemp, temp, self.bandCenter, self.fbw))
             effArr.append(1. - refl - emiss - spill)
 
