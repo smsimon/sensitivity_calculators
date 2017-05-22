@@ -86,25 +86,56 @@ class Calculate:
         effArr = np.insert(ch.effArr, len(ch.effArr), 1.0)
 
         #Calculate cumulative photon power
+        powerFrom    = [] #Power from this element onto the detector
+        powerTo      = [] #Power on this element from sky-side elements
         cumPowerIntegrands = []
         cumPower = 0
+
+        #Store the power from each element
+        powers     = []
+        effSkySide = []
+        effDetSide = []
+        for j in range(len(ch.elemArr)):
+            #Element emissivity
+            elemEmm = float(ch.emissArr[j])
+            #Element temperature
+            elemTemp = float(ch.tempArr[j])
+            #Detector-side efficiency
+            cumEffDet = reduce(lambda x, y: float(x)*float(y), effArr[j+1:])
+            effDetSide.append(cumEffDet)
+            #Sky-side efficiencies
+            cumEffSky = [reduce(lambda x, y: float(x)*float(y), effArr[i:j]) if i < j-1 else 1. for i in range(j)] + [0.]
+            #if j > 1:    cumEffSky = [reduce(lambda x, y: float(x)*float(y), effArr[i:j]) if i < j-1 else 1. for i in range(j)] + [0.]
+            #elif j == 1: cumEffSky = [1.] + [0.]
+            #else:        cumEffSky = []   + [0.]
+            effSkySide.append(cumEffSky)
+            #Add power emitted from this element
+            pow = self.__ph.bbPower(elemEmm, ch.bandCenter, ch.fbw, elemTemp, ch.nModes)
+            powers.append(pow)
+            
+        #Store other stuff
         for j in range(len(ch.elemArr)):
             #Element emissivity
             elemEmm = float(ch.emissArr[j])
             #Element temperature
             elemTemp = float(ch.tempArr[j])
             #Efficiency of everything detector-side of the element
-            cumEff = reduce(lambda x, y: float(x)*float(y), effArr[j+1:])
+            #cumEff = reduce(lambda x, y: float(x)*float(y), effArr[j+1:])
             #Add power seen at detector from that element
-            cumPower += self.__ph.bbPower(elemEmm*cumEff, ch.bandCenter, ch.fbw, elemTemp, ch.nModes)
+            #pow = self.__ph.bbPower(elemEmm*cumEff, ch.bandCenter, ch.fbw, elemTemp, ch.nModes)
+            powOut = powers[j]*effDetSide[j]
+            powerTo.append(powOut)
+            cumPower += powOut
+            powIn = sum([powers[k]*effSkySide[j][k] for k in range(j)])
+            powerFrom.append(powIn)
             #Add cumulative power integrand to array for each element
-            cumPowerIntegrands.append(lambda f, elemEmm=elemEmm, cumEff=cumEff, elemTemp=elemTemp, nModes=ch.nModes: self.__ph.bbPowSpec(elemEmm*cumEff, f, elemTemp, ch.nModes))
-            #cumPowerIntegrands.append(lambda f: self.__ph.bbPowSpec(elemEmm*cumEff, f, elemTemp))
+            cumPowerIntegrands.append(lambda f, elemEmm=elemEmm, cumEff=effDetSide[j], elemTemp=elemTemp, nModes=ch.nModes: self.__ph.bbPowSpec(elemEmm*cumEff, f, elemTemp, ch.nModes))
+
         #Photon NEP
         NEP_ph, NEP_pharr = self.__nse.photonNEP(cumPowerIntegrands, ch.bandCenter, ch.fbw)
         
         #Return optical power and photon noise
-        return cumPower, NEP_ph, NEP_pharr
+        return powerFrom, powerTo, cumPower, NEP_ph, NEP_pharr
 
     #Calculate mapping speed [(K^2-sec)^-1]
     def calcMappingSpeed(self, ch, corr=None):
@@ -117,16 +148,16 @@ class Calculate:
 
         #Photon noise and optical power
         if corr:
-            cumPower = self.calcPhotonNEP(ch)[0]
+            powIn, powOut, cumPower = self.calcPhotonNEP(ch)[:3]
             cumPowerIntegrands = []
             for j in range(len(ch.elemArr)):
                 elemEmm = float(ch.emissArr[j])
                 cumEff = float(np.prod(effArr[j+1:]))
-                elemTemp = float(ch.tempArr[j]);
+                elemTemp = float(ch.tempArr[j])
                 cumPowerIntegrands.append(lambda f, elemEmm=elemEmm, cumEff=cumEff, elemTemp=elemTemp, nModes=ch.nModes: self.__ph.bbPowSpec(elemEmm*cumEff, f, elemTemp))
             NEP_ph, NEP_pharr           = self.__nse.photonNEP(cumPowerIntegrands, ch.bandCenter, ch.fbw, ch.elemArr, ch.numDet, (ch.pixSize/(ch.Fnumber*self.__ph.lamb(ch.bandCenter))))
         else:
-            cumPower, NEP_ph, NEP_pharr = self.calcPhotonNEP(ch)            
+            powIn, powOut, cumPower, NEP_ph, NEP_pharr = self.calcPhotonNEP(ch)            
         NET_ph = self.__nse.NETfromNEP(NEP_ph, ch.bandCenter, ch.fbw, skyEff)
         #Bolometer noise
         if ch.psat == 'NA':
@@ -155,4 +186,4 @@ class Calculate:
         #Mapping speed
         MS = self.__nse.mappingSpeed(NET_arr, ch.numDet, ch.detYield)
 
-        return cumPower, NEP_ph, NEP_bolo, NEP_rd, NEP, NET_ph, NET_bolo, NET_rd, NET, NETarr, MS, Sens
+        return powIn, powOut, cumPower, NEP_ph, NEP_bolo, NEP_rd, NEP, NET_ph, NET_bolo, NET_rd, NET, NETarr, MS, Sens

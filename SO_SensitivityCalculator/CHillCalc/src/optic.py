@@ -41,7 +41,7 @@ class Optic:
         self.scattFrac = self.__float(opticDict['ScattFrac'])
         #Scattering Temperature 
         self.scattTemp = self.__float(opticDict['ScattTemp'])
-        
+
     #***** Private Functions *****
     def __float(self, val, unit=1.0):
         try:

@@ -7,13 +7,14 @@ import optimize as opt
 import glob as gb
 
 #Define which design to calculate
-designDir = './Designs/V2_dichroic/'
+designDir = './Designs/V2_TokiS4Bands/'
 
 #Define the atmosphere
 atmFile = './Atacama_1000um_60deg.txt'
 
 #Gather experiments
-designDirs  = sorted(gb.glob(designDir))
+designDirs  = sorted(gb.glob(designDir+'/*/'))
+print designDirs
 experiments = [exp.Experiment(dir) for dir in designDirs]
 
 #Optimize pixel sizes

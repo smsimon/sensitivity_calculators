@@ -57,7 +57,7 @@ class Display:
                 ch = telescope.chanArr[i]
 
                 #Calculate sensitivity
-                cumPower, NEPphoton, NEPbolo, NEPread, NEPTotal, NETphoton, NETbolo, NETread, NET, NETArray, MS, Sens = self.__clc.calcMappingSpeed(ch)
+                powIn, powOut, cumPower, NEPphoton, NEPbolo, NEPread, NEPTotal, NETphoton, NETbolo, NETread, NET, NETArray, MS, Sens = self.__clc.calcMappingSpeed(ch)
             
                 #Isolate aperture efficiency
                 ApertEff = ch.effArr[ch.elemArr.index('Aperture')]
@@ -77,6 +77,16 @@ class Display:
                 self.__netArr.append(NETArray)
                 self.__sens.append(Sens)
                 self.__ms.append(MS)
+                
+                #Write the optical powers for this channel to a file
+                outFile2 = telescope.dir+'/%.0fGHz_opticalPowerTable.txt' % (round(ch.bandCenter*self.__GHz))
+                f2 = open(outFile2, 'w')
+                f2.write("%-25s%-25s%-25s\n" % ("Optical Element", "Power from Sky-Side", "Power on Detector"))
+                f2.write("%-25s%-25s%-25s\n" % ("",                "[pW]",                "[pW]"))
+                for j in range(len(ch.elemArr)):
+                    f2.write("%-25s%-25.4f%-25.4f\n" % (ch.elemArr[j], powIn[j]*self.__pW, powOut[j]*self.__pW))
+                f2.close()
+
             #Write the total sensitivity
             printStr = str("%-11s%-22s%-11.0f%-88s%-11.2f%-15.4f%-11.2f\n" 
                            % ('Total', '', sum(self.__numDet), '', self.__ph.invVar(self.__netArr)*self.__uK,
@@ -84,7 +94,7 @@ class Display:
             print printStr
             f.write(printStr)
             f.close()
-            
+                        
         #Combine all telescopes
         print "***** %s *****" % (self.__exp.name)
         outputFile = self.__exp.dir+'/sensitivityTable.txt'

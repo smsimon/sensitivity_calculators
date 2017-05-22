@@ -8,11 +8,11 @@ import optimize as opt
 import glob as gb
 
 #Design directory to calculate
-designDir = './Designs/V2_dichroic'
+designDir = './Designs/V2_dichroic/'
 
 #Define the atmosphere
 atmFile = './Atacama_1000um_60deg.txt'
-correlations = True
+correlations = False
 
 #Gather experiments
 designDirs  = [sorted(gb.glob(x+'/*')) for x in sorted(gb.glob(designDir))]
