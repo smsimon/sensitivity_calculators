@@ -104,7 +104,7 @@ class Calculate:
             cumEffDet = reduce(lambda x, y: float(x)*float(y), effArr[j+1:])
             effDetSide.append(cumEffDet)
             #Sky-side efficiencies
-            cumEffSky = [reduce(lambda x, y: float(x)*float(y), effArr[i:j]) if i < j-1 else 1. for i in range(j)] + [0.]
+            cumEffSky = [reduce(lambda x, y: float(x)*float(y), effArr[i+1:j-1]) if i+1 < j-1 else 1. for i in range(j-1)] + [0.]
             #if j > 1:    cumEffSky = [reduce(lambda x, y: float(x)*float(y), effArr[i:j]) if i < j-1 else 1. for i in range(j)] + [0.]
             #elif j == 1: cumEffSky = [1.] + [0.]
             #else:        cumEffSky = []   + [0.]
@@ -126,7 +126,7 @@ class Calculate:
             powOut = powers[j]*effDetSide[j]
             powerTo.append(powOut)
             cumPower += powOut
-            powIn = sum([powers[k]*effSkySide[j][k] for k in range(j)])
+            powIn = sum([powers[k]*effSkySide[j][k] for k in range(j-1)])
             powerFrom.append(powIn)
             #Add cumulative power integrand to array for each element
             cumPowerIntegrands.append(lambda f, elemEmm=elemEmm, cumEff=effDetSide[j], elemTemp=elemTemp, nModes=ch.nModes: self.__ph.bbPowSpec(elemEmm*cumEff, f, elemTemp, ch.nModes))
