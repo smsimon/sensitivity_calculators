@@ -7,7 +7,8 @@ import optimize as opt
 import glob as gb
 
 #Define which design to calculate
-designDir = './Designs/V2_TokiS4Bands/'
+designDir = './Designs/V2_dichroic/'
+plotInMM = True
 
 #Define the atmosphere
 atmFile = './Atacama_1000um_60deg.txt'
@@ -19,4 +20,4 @@ experiments = [exp.Experiment(dir) for dir in designDirs]
 
 #Optimize pixel sizes
 optimizes   = [opt.Optimize(experiment) for experiment in experiments]
-for optimize in optimizes: optimize.optimizeFP()
+for optimize in optimizes: optimize.optimizeFP(plotInMM)

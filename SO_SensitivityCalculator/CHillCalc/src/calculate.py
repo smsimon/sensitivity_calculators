@@ -104,29 +104,26 @@ class Calculate:
             cumEffDet = reduce(lambda x, y: float(x)*float(y), effArr[j+1:])
             effDetSide.append(cumEffDet)
             #Sky-side efficiencies
-            cumEffSky = [reduce(lambda x, y: float(x)*float(y), effArr[i+1:j-1]) if i+1 < j-1 else 1. for i in range(j-1)] + [0.]
-            #if j > 1:    cumEffSky = [reduce(lambda x, y: float(x)*float(y), effArr[i:j]) if i < j-1 else 1. for i in range(j)] + [0.]
-            #elif j == 1: cumEffSky = [1.] + [0.]
-            #else:        cumEffSky = []   + [0.]
+            if   j == 0: cumEffSky = [0.] #Nothing sky-side
+            elif j == 1: cumEffSky = [1., 0.] #Only one element sky-side
+            else:        cumEffSky = [reduce(lambda x, y: float(x)*float(y), effArr[i+1:j]) if i+1 < j-1 else effArr[i+1] for i in range(j-1)] + [1., 0.]
             effSkySide.append(cumEffSky)
             #Add power emitted from this element
             pow = self.__ph.bbPower(elemEmm, ch.bandCenter, ch.fbw, elemTemp, ch.nModes)
             powers.append(pow)
-            
+
         #Store other stuff
         for j in range(len(ch.elemArr)):
             #Element emissivity
             elemEmm = float(ch.emissArr[j])
             #Element temperature
             elemTemp = float(ch.tempArr[j])
-            #Efficiency of everything detector-side of the element
-            #cumEff = reduce(lambda x, y: float(x)*float(y), effArr[j+1:])
             #Add power seen at detector from that element
-            #pow = self.__ph.bbPower(elemEmm*cumEff, ch.bandCenter, ch.fbw, elemTemp, ch.nModes)
             powOut = powers[j]*effDetSide[j]
             powerTo.append(powOut)
             cumPower += powOut
-            powIn = sum([powers[k]*effSkySide[j][k] for k in range(j-1)])
+            #Add power seen at element from sky side
+            powIn = sum([powers[k]*effSkySide[j][k] for k in range(j+1)])
             powerFrom.append(powIn)
             #Add cumulative power integrand to array for each element
             cumPowerIntegrands.append(lambda f, elemEmm=elemEmm, cumEff=effDetSide[j], elemTemp=elemTemp, nModes=ch.nModes: self.__ph.bbPowSpec(elemEmm*cumEff, f, elemTemp, ch.nModes))
