@@ -2,13 +2,14 @@
 
 'CHillCalc' was  written in full by Charles Hill at UC Berkeley
 Publish date = 2016-12-07
-Latest revision = 3.1
-Latest revision date = 2017-05-24
+Latest revision = 3.1.2
+Latest revision date = 2017-05-30
 
 ##########################
 
 REVISION HISTORY
 
+* 3.1.2 on 2017-05-30 -- bug fix for optimizeFP.py
 * 3.1.1 on 2017-05-24 -- bug fix for output of optical power tables
 * 3.1   on 2017-05-22 -- addition of capability: output tables of optical power at each optical element and contribution of each element's emission to detector loading
 * 3.0   on 2017-05-02 -- addition of V2 designs and implementation of white noise correlations
