@@ -150,10 +150,6 @@ class Channel:
             #Store parameters
             elemArr.append(elem)
             tempArr.append(temp)
-            #print emiss
-            #print scatt
-            #print scattTemp
-            #print spill
             emissArr.append(emiss + scatt*self.__powFrac(scattTemp, temp, self.bandCenter, self.fbw) + spill*self.__powFrac(spillTemp, temp, self.bandCenter, self.fbw))
             effArr.append(1. - refl - emiss - spill)
 

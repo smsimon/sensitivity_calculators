@@ -32,13 +32,14 @@ class Sky:
         if self.__atmFile:
             #Atmosphere parameters
             self.Natm = 'ATM'
-            self.Tatm = 273. #K
+            self.Aatm = 1.
             self.freq, self.atmTemp, self.atmTx = np.loadtxt(self.__atmFile, dtype=np.str, unpack=True, usecols=[0, 2, 3])
         
     #***** Private methods *****
     def __atmTrans(self, bandCenter, fbw):
         freqs = []
         trans = []
+        temps = []
         fLo = bandCenter*(1. - 0.5*fbw)
         fHi = bandCenter*(1. + 0.5*fbw)
         for i in range(len(self.freq)):
@@ -46,7 +47,10 @@ class Sky:
             if f > fLo and f < fHi:
                 freqs.append(f)
                 trans.append(float(self.atmTx[i]))
-        return np.trapz(trans, freqs)/(freqs[-1] - freqs[0])
+                temps.append(float(self.atmTemp[i]))
+        tr = np.trapz(trans, freqs)/(freqs[-1] - freqs[0])
+        tp = np.trapz(temps, freqs)/(freqs[-1] - freqs[0])
+        return tr, tp
         
     def __getFreqs(self, bandCenter, fbw, nSample=100): 
         fLo = bandCenter*(1. - 0.5*fbw)
@@ -57,8 +61,7 @@ class Sky:
     def skyParams(self, bandCenter, fbw):
         #Calculate atmosphere transmission and absorption
         if self.__atmFile:
-            self.Eatm = self.__atmTrans(bandCenter, fbw)
-            self.Aatm = 1. - self.Eatm
+            self.Eatm, self.Tatm = self.__atmTrans(bandCenter, fbw)
         #Calculate foreground temperatures
         if self.__inclF:
             #Caluclate synchrotron BB temperature

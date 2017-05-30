@@ -104,9 +104,9 @@ class Calculate:
             cumEffDet = reduce(lambda x, y: float(x)*float(y), effArr[j+1:])
             effDetSide.append(cumEffDet)
             #Sky-side efficiencies
-            if   j == 0: cumEffSky = [0.] #Nothing sky-side
+            if   j == 0: cumEffSky = [0.]     #Nothing sky-side
             elif j == 1: cumEffSky = [1., 0.] #Only one element sky-side
-            else:        cumEffSky = [reduce(lambda x, y: float(x)*float(y), effArr[i+1:j]) if i+1 < j-1 else effArr[i+1] for i in range(j-1)] + [1., 0.]
+            else:        cumEffSky = [reduce(lambda x, y: float(x)*float(y), effArr[i+1:j]) if i < j-2 else effArr[i+1] for i in range(j-1)] + [1., 0.]
             effSkySide.append(cumEffSky)
             #Add power emitted from this element
             pow = self.__ph.bbPower(elemEmm, ch.bandCenter, ch.fbw, elemTemp, ch.nModes)

@@ -14,9 +14,9 @@ plotInMM = True
 atmFile = './Atacama_1000um_60deg.txt'
 
 #Gather experiments
-designDirs  = sorted(gb.glob(designDir+'/*/'))
-print designDirs
-experiments = [exp.Experiment(dir) for dir in designDirs]
+#designDirs  = sorted(gb.glob(designDir+'/*/'))
+designDirs  = sorted(gb.glob(designDir+'/MF_45cm_7waf_silicon/'))
+experiments = [exp.Experiment(dir, atmFile) for dir in designDirs]
 
 #Optimize pixel sizes
 optimizes   = [opt.Optimize(experiment) for experiment in experiments]
