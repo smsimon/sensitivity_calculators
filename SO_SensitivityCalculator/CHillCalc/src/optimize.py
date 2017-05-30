@@ -40,7 +40,7 @@ class Optimize:
             if plotInMM: 
                 pixLo = pixSizesFnum[0]*chans[-1].Fnumber*self.__ph.lamb(chans[-1].bandCenter)
                 pixHi = pixSizesFnum[-1]*chans[0].Fnumber*self.__ph.lamb(chans[0].bandCenter )
-                pixSp = 0.0001 #m
+                pixSp = 0.0003 #m
                 pixSizes = np.arange(pixLo, pixHi, pixSp) #m
             for ch in chans:
                 freqStr += '%d_' % (int(ch.bandCenter*1.e-9))
