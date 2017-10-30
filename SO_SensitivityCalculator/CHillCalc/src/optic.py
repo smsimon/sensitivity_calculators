@@ -10,7 +10,7 @@ class Optic:
         self.__Spm = 1.e+06
         self.__um  = 1.e-06
         self.__GHz = 1.e+09
-        self.__bid = bandID
+        self.__bid = int(bandID)
         
         #***** Public Variables *****
         #Element name
